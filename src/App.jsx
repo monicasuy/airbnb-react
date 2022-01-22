@@ -1,80 +1,70 @@
 import './App.scss';
 import Flat from './Flat.jsx'
-import Map from './Map.jsx'
 
-const FLATS = [
-  {
-    "id": 145,
-    "name": "Charm at the Steps of the Sacre Coeur/Montmartre",
-    "imageUrl": "https://raw.githubusercontent.com/lewagon/flats-boilerplate/master/images/flat1.jpg",
-    "price": 164,
-    "priceCurrency": "EUR",
-    "lat": 48.884211,
-    "lng": 2.346890
-  },
-  {
-    "id": 148,
-    "name": "Trendy Apt in Buttes Montmartre",
-    "imageUrl": "https://raw.githubusercontent.com/lewagon/flats-boilerplate/master/images/flat2.jpg",
-    "price": 200,
-    "priceCurrency": "EUR",
-    "lat": 48.885707,
-    "lng": 2.343543
-  },
-  {
-    "id": 201,
-    "name": "Super 60m2 in trendy neighborhood!",
-    "imageUrl": "https://raw.githubusercontent.com/lewagon/flats-boilerplate/master/images/flat3.jpg",
-    "price": 150,
-    "priceCurrency": "EUR",
-    "lat": 48.885312,
-    "lng": 2.341225
-  },
-  {
-    "id": 205,
-    "name": "Splendide terrasse vue imprenable",
-    "imageUrl": "https://raw.githubusercontent.com/lewagon/flats-boilerplate/master/images/flat4.jpg",
-    "price": 115,
-    "priceCurrency": "EUR",
-    "lat": 48.881840,
-    "lng": 2.343371
-  },
-  {
-    "id": 210,
-    "name": "Superbe vue à 2 min du Sacré Coeur",
-    "imageUrl": "https://raw.githubusercontent.com/lewagon/flats-boilerplate/master/images/flat5.jpg",
-    "price": 135,
-    "priceCurrency": "EUR",
-    "lat": 48.888839,
-    "lng": 2.339208
-  },
-  {
-    "id": 211,
-    "name": "Bohemian and Chic in Paris",
-    "imageUrl": "https://raw.githubusercontent.com/lewagon/flats-boilerplate/master/images/flat6.jpg",
-    "price": 90,
-    "priceCurrency": "EUR",
-    "lat": 48.827855,
-    "lng": 2.350774
+import { Component } from 'react'
+import FlatMarker from './FlatMarker.jsx';
+import ReactMapboxGl from 'react-mapbox-gl';
+
+const Map = ReactMapboxGl({ accessToken: 'pk.eyJ1IjoibW9uaWNhc3V5IiwiYSI6ImNrdmNkNW92ODBrOGwycW84NGw1enNwbTEifQ.En9S4S3XuslePAouC7ieXA' })
+
+const FLATS_URL = 'https://raw.githubusercontent.com/lewagon/flats-boilerplate/master/flats.json'
+
+class App extends Component {
+  state = {
+    flats: []
   }
-]
 
-const App = () => {
-  return (
-    <div className='main'>
-      <input className='search' />
-      <div className="App">
-          <div className='flat-list'>
-            {FLATS.map(flat =>
-              <Flat name={flat.name} id={flat.id} price={flat.price} image_url={flat.imageUrl} lng={flat.lng} lat={flat.lat} />
-            )}
+  componentDidMount() {
+    console.log("component did mount")
+    this.fetchFlats(); // we call this method here and not in render because state can't be changed in render
+    // and if we called it in render it would create an infinite loop
+  }
+
+  fetchFlats = () => {
+    console.log('fetching flats')
+    fetch(FLATS_URL)
+    .then(response => response.json())
+    .then (data => {
+      this.setState({ flats: data })
+    });
+  }
+
+  render () { // method always called after the state changes, NEVER change state inside of render
+    console.log("in render")
+    if (this.state.flats.length === 0) {
+      return(
+        <span>
+          <h3>Loading...</h3>
+        </span>
+      )}
+    else {
+      return (
+          <div className='main'>
+            <input className='search' />
+            <div className="App">
+                <div className='flat-list'>
+                  {this.state.flats.map(flat =>
+                    <Flat name={flat.name} id={flat.id} price={flat.price} image_url={flat.imageUrl} lng={flat.lng} lat={flat.lat} />
+                  )}
+                </div>
+            <div className='map'>
+              <Map
+              zoom={[13]}
+              center={[2.346890, 48.884211]}
+              containerStyle={{height: '100vh', width: '100%'}}
+              style='mapbox://styles/mapbox/streets-v11'>
+              {this.state.flats.map(flat => {
+                return(
+                  <FlatMarker price={flat.price} lng={flat.lng} lat={flat.lat} />
+                  )
+                })}
+              </Map>
+            </div>
           </div>
-      <div className='map'>
-        <Map />
-      </div>
-      </div>
-    </div>
-  );
+        </div>
+      );
+    }
+  }
 }
 
 export default App;
