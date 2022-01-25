@@ -11,7 +11,9 @@ const FLATS_URL = 'https://raw.githubusercontent.com/lewagon/flats-boilerplate/m
 
 class App extends Component {
   state = {
-    flats: []
+    flats: [],
+    center: [2.346890, 48.884211],
+    selectedFlat: null
   }
 
   componentDidMount() {
@@ -29,9 +31,19 @@ class App extends Component {
     });
   }
 
+  handleFlatClick = (flatId) => {
+    const selectedFlat = this.state.flats.find( flat => flat.id === flatId )
+    this.setState( {
+      center: [selectedFlat.lng, selectedFlat.lat],
+      selectedFlat: selectedFlat})
+  }
+
   render () { // method always called after the state changes, NEVER change state inside of render
+
+    const { center, flats, selectedFlat } = this.state;
+
     console.log("in render")
-    if (this.state.flats.length === 0) {
+    if (flats.length === 0) {
       return(
         <span>
           <h3>Loading...</h3>
@@ -43,19 +55,31 @@ class App extends Component {
             <input className='search' />
             <div className="App">
                 <div className='flat-list'>
-                  {this.state.flats.map(flat =>
-                    <Flat name={flat.name} id={flat.id} price={flat.price} image_url={flat.imageUrl} lng={flat.lng} lat={flat.lat} />
+                  {this.state.flats.map(flat => {
+                    const isSelected = selectedFlat === flat;
+                    return(
+                    <Flat
+                    onClick={this.handleFlatClick}
+                    selected = {isSelected}
+                    name={flat.name}
+                    id={flat.id}
+                    price={flat.price}
+                    image_url={flat.imageUrl}
+                    lng={flat.lng}
+                    lat={flat.lat} />
+                    )}
                   )}
                 </div>
             <div className='map'>
               <Map
               zoom={[13]}
-              center={[2.346890, 48.884211]}
+              center={center}
               containerStyle={{height: '100vh', width: '100%'}}
               style='mapbox://styles/mapbox/streets-v11'>
-              {this.state.flats.map(flat => {
+              {flats.map(flat => {
+                const isSelected = selectedFlat === flat;
                 return(
-                  <FlatMarker price={flat.price} lng={flat.lng} lat={flat.lat} />
+                  <FlatMarker selected={isSelected} price={flat.price} lng={flat.lng} lat={flat.lat} />
                   )
                 })}
               </Map>
